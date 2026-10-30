@@ -1,0 +1,180 @@
+# changelog-actions
+
+Two GitHub Actions that keep a [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) `CHANGELOG.md` up to date:
+
+- **`update`** adds an entry to `## [Unreleased]` for every merged pull request, in the category picked from its labels.
+- **`release`** turns `## [Unreleased]` into `## [X.Y.Z] - YYYY-MM-DD`, then tags it and creates a GitHub release with that section as release notes.
+
+Both actions write through the GitHub API: no `actions/checkout`, no git setup.
+
+## Usage
+
+### Update the changelog on every merged PR
+
+```yaml
+# .github/workflows/update-changelog.yml
+name: Update Changelog
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches: [main]
+
+concurrency:
+  group: changelog
+  queue: max
+
+jobs:
+  update-changelog:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: DannyvdSluijs/changelog-actions/update@v1
+```
+
+A PR titled `Fix validation of x` with the label `bug` becomes:
+
+```markdown
+## [Unreleased]
+
+### Fixed
+- Fix validation of x ([#123](https://github.com/owner/repo/pull/123))
+```
+
+`pull_request_target` is safe here: the action only reads the event payload and never checks out or runs code from the PR.
+
+### Create a release
+
+```yaml
+# .github/workflows/release.yml
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g. 7.0.0 or 7.0.0-rc1)'
+        required: true
+        type: string
+
+concurrency:
+  group: changelog
+  queue: max
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: DannyvdSluijs/changelog-actions/release@v1
+        with:
+          version: ${{ inputs.version }}
+```
+
+Before writing anything, the action checks that the version is a bare semantic version (no `v` prefix), that `[Unreleased]` has changes, and that neither the changelog section nor the tag already exist. Pre-release versions such as `7.0.0-rc1` become GitHub pre-releases.
+
+## Inputs
+
+### `update`
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `token` | `${{ github.token }}` | Token used to commit. See [protected branches](#protected-branches). |
+| `changelog-path` | `CHANGELOG.md` | Path to the changelog. Created with the standard header if missing. |
+| `label-mapping` | see below | YAML mapping of category to label(s). |
+| `default-category` | `Changed` | Category for PRs without a mapped label. |
+| `entry-template` | `- {title} ([#{number}]({url}))` | Placeholders: `{title}`, `{number}`, `{url}`, `{author}`. |
+| `strip-prefixes` | `false` | Strip Conventional Commit prefixes (`fix:`, `feat(scope):`, …) from the title. |
+| `commit-message` | `docs: Update CHANGELOG.md for PR #{number}` | Same placeholders as `entry-template`. |
+| `committer-name` | `github-actions[bot]` | |
+| `committer-email` | `41898282+github-actions[bot]@users.noreply.github.com` | |
+
+Outputs: `category`, `entry`, `commit-sha`.
+
+### `release`
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `version` | *(required)* | Bare semantic version, e.g. `7.0.0` or `7.0.0-rc1`. |
+| `token` | `${{ github.token }}` | Token used to commit, tag and release. |
+| `changelog-path` | `CHANGELOG.md` | Path to the changelog. |
+| `commit-message` | `docs: Prepare release {version}` | |
+| `committer-name` | `github-actions[bot]` | Also used as tagger. |
+| `committer-email` | `41898282+github-actions[bot]@users.noreply.github.com` | |
+| `tag` | `true` | Create an annotated tag. |
+| `github-release` | `true` | Create a GitHub release. |
+
+Outputs: `version`, `notes`, `commit-sha`, `release-url`.
+
+## Label mapping
+
+Labels match exactly, ignoring case. When a PR has labels for several categories, the first category in the mapping wins. The default mapping:
+
+```yaml
+Changed: [breaking, changed]
+Added: [enhancement, feature, added]
+Deprecated: [deprecated]
+Removed: [removed]
+Fixed: [bug, fix, fixed]
+Security: [security]
+```
+
+To use your own, pass it as a multi-line string. It replaces the default entirely:
+
+```yaml
+- uses: DannyvdSluijs/changelog-actions/update@v1
+  with:
+    label-mapping: |
+      Added: [feature]
+      Fixed: [bug, regression]
+      Security: security
+```
+
+Categories are the Keep a Changelog ones: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`.
+
+## How the changelog is edited
+
+- New entries go on top of their category.
+- A missing category heading is inserted in Keep a Changelog order.
+- A missing `## [Unreleased]` section is inserted above the first release.
+- Re-running the action for the same PR does nothing: if the PR URL is already in the changelog, no entry is added.
+- Only the `[Unreleased]` section is rewritten; released sections are never touched. Its layout is normalised to one blank line between categories.
+
+## Concurrency
+
+Put every workflow using these actions in the **same** concurrency group with `queue: max`, as in the examples above. Runs then execute one at a time, first in first out, and a release waits for pending changelog updates.
+
+Without `queue: max` GitHub keeps only one pending run per group and cancels older pending runs, so merging three PRs in quick succession would lose an entry.
+
+As a safety net, the actions write the changelog with the file's `sha`: if the file changed between reading and writing (for example a manual edit at the same moment), the run fails without overwriting anything. Re-run it; the entry is added once.
+
+## Protected branches
+
+The default `GITHUB_TOKEN` cannot push to a protected branch. Pass a token that may bypass the protection, for example a GitHub App installation token where the app is a bypass actor in the branch ruleset:
+
+```yaml
+- uses: actions/create-github-app-token@v2
+  id: app-token
+  with:
+    app-id: ${{ vars.CHANGELOG_APP_ID }}
+    private-key: ${{ secrets.CHANGELOG_APP_PRIVATE_KEY }}
+- uses: DannyvdSluijs/changelog-actions/update@v1
+  with:
+    token: ${{ steps.app-token.outputs.token }}
+```
+
+## Development
+
+```sh
+npm ci
+npm run all   # typecheck, test, build
+```
+
+`update/dist` and `release/dist` are committed; CI fails when they are out of date.
+
+## License
+
+[MIT](LICENSE)
