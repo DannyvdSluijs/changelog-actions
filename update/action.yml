@@ -1,0 +1,47 @@
+name: 'Changelog: update on merge'
+description: 'Adds an entry for every merged PR to the Unreleased section of a Keep a Changelog CHANGELOG.md, categorised by PR label.'
+author: 'Danny van der Sluijs'
+branding:
+  icon: 'book-open'
+  color: 'blue'
+
+inputs:
+  token:
+    description: 'Token used to commit the changelog. Use a token that may bypass branch protection if the base branch is protected.'
+    default: ${{ github.token }}
+  changelog-path:
+    description: 'Path to the changelog file.'
+    default: 'CHANGELOG.md'
+  label-mapping:
+    description: 'YAML mapping of category to label(s). Labels match exactly, ignoring case; the first matching category wins. Empty uses the default mapping.'
+    default: ''
+  default-category:
+    description: 'Category for PRs without a mapped label.'
+    default: 'Changed'
+  entry-template:
+    description: 'Template for the entry. Placeholders: {title}, {number}, {url}, {author}.'
+    default: '- {title} ([#{number}]({url}))'
+  strip-prefixes:
+    description: 'Strip Conventional Commit prefixes such as "fix:" or "feat(scope):" from the PR title.'
+    default: 'false'
+  commit-message:
+    description: 'Commit message. Placeholders: {title}, {number}, {url}, {author}.'
+    default: 'docs: Update CHANGELOG.md for PR #{number}'
+  committer-name:
+    description: 'Name of the committer.'
+    default: 'github-actions[bot]'
+  committer-email:
+    description: 'Email of the committer.'
+    default: '41898282+github-actions[bot]@users.noreply.github.com'
+
+outputs:
+  category:
+    description: 'The category the entry was added to.'
+  entry:
+    description: 'The rendered entry.'
+  commit-sha:
+    description: 'The sha of the changelog commit. Empty when nothing was committed.'
+
+runs:
+  using: 'node24'
+  main: 'dist/index.cjs'
