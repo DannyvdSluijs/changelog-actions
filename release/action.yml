@@ -1,0 +1,46 @@
+name: 'Changelog: release'
+description: 'Turns the Unreleased section of a Keep a Changelog CHANGELOG.md into a dated release, then tags it and creates a GitHub release.'
+author: 'Danny van der Sluijs'
+branding:
+  icon: 'tag'
+  color: 'blue'
+
+inputs:
+  version:
+    description: 'Version to release, as a bare semantic version, e.g. "7.0.0" or "7.0.0-rc1".'
+    required: true
+  token:
+    description: 'Token used to commit, tag and release. Use a token that may bypass branch protection if the branch is protected.'
+    default: ${{ github.token }}
+  changelog-path:
+    description: 'Path to the changelog file.'
+    default: 'CHANGELOG.md'
+  commit-message:
+    description: 'Commit message. Placeholder: {version}.'
+    default: 'docs: Prepare release {version}'
+  committer-name:
+    description: 'Name of the committer and tagger.'
+    default: 'github-actions[bot]'
+  committer-email:
+    description: 'Email of the committer and tagger.'
+    default: '41898282+github-actions[bot]@users.noreply.github.com'
+  tag:
+    description: 'Create an annotated tag for the release.'
+    default: 'true'
+  github-release:
+    description: 'Create a GitHub release with the changelog section as release notes.'
+    default: 'true'
+
+outputs:
+  version:
+    description: 'The released version.'
+  notes:
+    description: 'The release notes, i.e. the new changelog section without its heading.'
+  commit-sha:
+    description: 'The sha of the changelog commit.'
+  release-url:
+    description: 'The URL of the GitHub release, when one was created.'
+
+runs:
+  using: 'node24'
+  main: 'dist/index.cjs'
