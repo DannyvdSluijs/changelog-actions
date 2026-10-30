@@ -114,8 +114,8 @@ Outputs: `version`, `notes`, `commit-sha`, `release-url`.
 Labels match exactly, ignoring case. When a PR has labels for several categories, the first category in the mapping wins. The default mapping:
 
 ```yaml
-Changed: [breaking, changed]
 Added: [enhancement, feature, added]
+Changed: [breaking, changed]
 Deprecated: [deprecated]
 Removed: [removed]
 Fixed: [bug, fix, fixed]

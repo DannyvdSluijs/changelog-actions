@@ -5,8 +5,8 @@ import { type Category, CATEGORIES, toCategory } from './changelog.js';
 export type LabelMapping = Array<{ category: Category; labels: string[] }>;
 
 export const DEFAULT_LABEL_MAPPING: LabelMapping = [
-  { category: 'Changed', labels: ['breaking', 'changed'] },
   { category: 'Added', labels: ['enhancement', 'feature', 'added'] },
+  { category: 'Changed', labels: ['breaking', 'changed'] },
   { category: 'Deprecated', labels: ['deprecated'] },
   { category: 'Removed', labels: ['removed'] },
   { category: 'Fixed', labels: ['bug', 'fix', 'fixed'] },

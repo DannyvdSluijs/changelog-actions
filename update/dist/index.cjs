@@ -31363,8 +31363,8 @@ async function writeFile(octokit, repo, path, branch, content, sha, message, com
 // src/labels.ts
 var import_yaml = __toESM(require_dist(), 1);
 var DEFAULT_LABEL_MAPPING = [
-  { category: "Changed", labels: ["breaking", "changed"] },
   { category: "Added", labels: ["enhancement", "feature", "added"] },
+  { category: "Changed", labels: ["breaking", "changed"] },
   { category: "Deprecated", labels: ["deprecated"] },
   { category: "Removed", labels: ["removed"] },
   { category: "Fixed", labels: ["bug", "fix", "fixed"] },

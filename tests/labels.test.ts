@@ -40,6 +40,7 @@ describe('resolveCategory', () => {
 
   it('lets the first matching category win', () => {
     expect(resolveCategory(['bug', 'feature'], DEFAULT_LABEL_MAPPING, 'Changed')).toBe('Added');
+    expect(resolveCategory(['changed', 'feature'], DEFAULT_LABEL_MAPPING, 'Changed')).toBe('Added');
   });
 
   it('falls back to the default category', () => {
