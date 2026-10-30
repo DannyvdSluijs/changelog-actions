@@ -1,0 +1,29 @@
+{
+  "name": "changelog-actions",
+  "version": "0.0.0",
+  "private": true,
+  "description": "GitHub Actions that keep a Keep a Changelog CHANGELOG.md up to date on every merged PR and turn it into releases.",
+  "license": "MIT",
+  "author": "Danny van der Sluijs",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "all": "npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
