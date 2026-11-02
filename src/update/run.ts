@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { addEntry, ensureUnreleased, mentionsUrl } from '../changelog.js';
 import { readFile, writeFile } from '../github.js';
+import { writeOutputFile } from '../output.js';
 import { parseCategory, parseLabelMapping, resolveCategory } from '../labels.js';
 import { render, sanitizeTitle, stripConventionalPrefix } from '../template.js';
 
@@ -53,6 +54,7 @@ export async function run(): Promise<void> {
     core.info(`Entry: ${entry}`);
     core.setOutput('category', category);
     core.setOutput('entry', entry);
+    core.setOutput('entry-file', writeOutputFile('entry.md', entry));
 
     const file = await readFile(octokit, context.repo, path, branch);
     const current = file?.content ?? null;

@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { release } from '../changelog.js';
 import { createRelease, createTag, readFile, tagExists, writeFile } from '../github.js';
+import { writeOutputFile } from '../output.js';
 import { render } from '../template.js';
 import { isPrerelease, today, validateVersion } from '../version.js';
 
@@ -30,6 +31,7 @@ export async function run(): Promise<void> {
     core.info(`Committed ${commitSha} to ${branch}.`);
     core.setOutput('version', version);
     core.setOutput('notes', notes);
+    core.setOutput('notes-file', writeOutputFile('notes.md', notes));
     core.setOutput('commit-sha', commitSha);
 
     if (shouldTag) {
