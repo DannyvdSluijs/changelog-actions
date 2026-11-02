@@ -19,7 +19,7 @@ inputs:
     description: 'Category for PRs without a mapped label.'
     default: 'Changed'
   entry-template:
-    description: 'Template for the entry. Placeholders: {title}, {number}, {url}, {author}.'
+    description: 'Template for the entry: a single line starting with a list marker such as "- ". Placeholders: {title}, {number}, {url}, {author}.'
     default: '- {title} ([#{number}]({url}))'
   strip-prefixes:
     description: 'Strip Conventional Commit prefixes such as "fix:" or "feat(scope):" from the PR title.'

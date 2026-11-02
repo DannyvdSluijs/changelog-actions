@@ -86,7 +86,7 @@ Before writing anything, the action checks that the version is a bare semantic v
 | `changelog-path` | `CHANGELOG.md` | Path to the changelog. Created with the standard header if missing. |
 | `label-mapping` | see below | YAML mapping of category to label(s). |
 | `default-category` | `Changed` | Category for PRs without a mapped label. |
-| `entry-template` | `- {title} ([#{number}]({url}))` | Placeholders: `{title}`, `{number}`, `{url}`, `{author}`. |
+| `entry-template` | `- {title} ([#{number}]({url}))` | A single line starting with a list marker (`- `, `* ` or `+ `). Placeholders: `{title}`, `{number}`, `{url}`, `{author}`. |
 | `strip-prefixes` | `false` | Strip Conventional Commit prefixes (`fix:`, `feat(scope):`, …) from the title. |
 | `commit-message` | `docs: Update CHANGELOG.md for PR #{number}` | Same placeholders as `entry-template`. |
 | `committer-name` | `github-actions[bot]` | |

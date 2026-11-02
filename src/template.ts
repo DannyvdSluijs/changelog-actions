@@ -21,3 +21,16 @@ export function stripConventionalPrefix(title: string): string {
 export function sanitizeTitle(title: string): string {
   return title.replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, ' ').trim();
 }
+
+/**
+ * Checks that the entry template renders a single list item. A placeholder at the start of a line, such as
+ * a bare `{title}`, would let a PR title like `## [1.5.0] - 2021-01-01` become a heading in the changelog.
+ */
+export function validateEntryTemplate(template: string): string {
+  if (/[\r\n]/.test(template.trim()) || !/^\s*[-*+] /.test(template)) {
+    throw new Error(
+      `entry-template must be a single line starting with a list marker such as "- ", got "${template}".`,
+    );
+  }
+  return template;
+}
