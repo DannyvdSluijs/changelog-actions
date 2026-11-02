@@ -31412,6 +31412,9 @@ function stripConventionalPrefix(title) {
   const stripped = title.replace(/^[a-z]+(\([^)]*\))?!?:\s*/i, "");
   return stripped === "" ? title : stripped;
 }
+function sanitizeTitle(title) {
+  return title.replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, " ").trim();
+}
 
 // src/update/run.ts
 var SUPPORTED_EVENTS = ["pull_request", "pull_request_target"];
@@ -31436,8 +31439,9 @@ async function run() {
     const branch = pr.base.ref;
     const labels = pr.labels.map((label) => label.name);
     const category = resolveCategory(labels, mapping, fallback);
+    const title = sanitizeTitle(pr.title);
     const values = {
-      title: core.getBooleanInput("strip-prefixes") ? stripConventionalPrefix(pr.title) : pr.title,
+      title: core.getBooleanInput("strip-prefixes") ? stripConventionalPrefix(title) : title,
       number: pr.number,
       url: pr.html_url,
       author: pr.user.login
