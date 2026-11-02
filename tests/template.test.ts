@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, sanitizeTitle, stripConventionalPrefix } from '../src/template.js';
+import { render, sanitizeTitle, stripConventionalPrefix, validateEntryTemplate } from '../src/template.js';
 
 describe('render', () => {
   it('replaces known placeholders and keeps unknown ones', () => {
@@ -35,4 +35,20 @@ describe('sanitizeTitle', () => {
   ])('%j -> %j', (title, expected) => {
     expect(sanitizeTitle(title)).toBe(expected);
   });
+});
+
+describe('validateEntryTemplate', () => {
+  it.each(['- {title} ([#{number}]({url}))', '* {title}', '+ {title} by @{author}', '  - {title}'])(
+    'accepts %j',
+    (template) => {
+      expect(validateEntryTemplate(template)).toBe(template);
+    },
+  );
+
+  it.each(['{title}', '[{title}]({url})', '-{title}', '', '- {title}\n{url}', '- x\n## {title}'])(
+    'refuses %j',
+    (template) => {
+      expect(() => validateEntryTemplate(template)).toThrow('entry-template must be a single line');
+    },
+  );
 });

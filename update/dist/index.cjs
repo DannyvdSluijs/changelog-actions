@@ -31442,6 +31442,14 @@ function stripConventionalPrefix(title) {
 function sanitizeTitle(title) {
   return title.replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, " ").trim();
 }
+function validateEntryTemplate(template) {
+  if (/[\r\n]/.test(template.trim()) || !/^\s*[-*+] /.test(template)) {
+    throw new Error(
+      `entry-template must be a single line starting with a list marker such as "- ", got "${template}".`
+    );
+  }
+  return template;
+}
 
 // src/update/run.ts
 var SUPPORTED_EVENTS = ["pull_request", "pull_request_target"];
@@ -31458,6 +31466,7 @@ async function run() {
       core.info(`PR #${pr.number} was closed without merging; nothing to do.`);
       return;
     }
+    const template = validateEntryTemplate(core.getInput("entry-template"));
     const path = core.getInput("changelog-path");
     const mapping = parseLabelMapping(core.getInput("label-mapping"));
     const fallback = parseCategory(core.getInput("default-category"));
@@ -31473,7 +31482,6 @@ async function run() {
       url: pr.html_url,
       author: pr.user.login
     };
-    const template = core.getInput("entry-template");
     const entry = render(template, values);
     core.info(`Labels: ${labels.join(", ") || "(none)"} -> ${category}`);
     core.info(`Entry: ${entry}`);

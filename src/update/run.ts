@@ -4,7 +4,7 @@ import { addEntry, ensureUnreleased, hasEntry } from '../changelog.js';
 import { readFile, writeFile } from '../github.js';
 import { writeOutputFile } from '../output.js';
 import { parseCategory, parseLabelMapping, resolveCategory } from '../labels.js';
-import { render, sanitizeTitle, stripConventionalPrefix } from '../template.js';
+import { render, sanitizeTitle, stripConventionalPrefix, validateEntryTemplate } from '../template.js';
 
 const SUPPORTED_EVENTS = ['pull_request', 'pull_request_target'];
 
@@ -33,6 +33,7 @@ export async function run(): Promise<void> {
       return;
     }
 
+    const template = validateEntryTemplate(core.getInput('entry-template'));
     const path = core.getInput('changelog-path');
     const mapping = parseLabelMapping(core.getInput('label-mapping'));
     const fallback = parseCategory(core.getInput('default-category'));
@@ -49,7 +50,6 @@ export async function run(): Promise<void> {
       url: pr.html_url,
       author: pr.user.login,
     };
-    const template = core.getInput('entry-template');
     const entry = render(template, values);
     core.info(`Labels: ${labels.join(', ') || '(none)'} -> ${category}`);
     core.info(`Entry: ${entry}`);
