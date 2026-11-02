@@ -23,13 +23,33 @@ function status(error: unknown): number | undefined {
   return typeof error === 'object' && error !== null && 'status' in error ? Number(error.status) : undefined;
 }
 
+/**
+ * The contents API only includes the content of files up to 1 MB. For larger files it returns an empty
+ * `content` with encoding `none`, so those are read through the blobs API, which handles up to 100 MB.
+ * Any other encoding is refused: treating the file as empty would replace the whole changelog.
+ */
+async function decodeContent(
+  octokit: Octokit,
+  repo: Repo,
+  path: string,
+  file: { content: string; encoding: string; sha: string },
+): Promise<string> {
+  if (file.encoding === 'base64') return Buffer.from(file.content, 'base64').toString('utf8');
+  if (file.encoding === 'none') {
+    const { data } = await octokit.rest.git.getBlob({ ...repo, file_sha: file.sha });
+    if (data.encoding === 'base64') return Buffer.from(data.content, 'base64').toString('utf8');
+    throw new Error(`Cannot read ${path}: GitHub returned it with encoding "${data.encoding}".`);
+  }
+  throw new Error(`Cannot read ${path}: GitHub returned it with encoding "${file.encoding}".`);
+}
+
 export async function readFile(octokit: Octokit, repo: Repo, path: string, branch: string): Promise<RepoFile | null> {
   try {
     const { data } = await octokit.rest.repos.getContent({ ...repo, path, ref: branch });
     if (Array.isArray(data) || data.type !== 'file') {
       throw new Error(`${path} is not a file.`);
     }
-    return { content: Buffer.from(data.content, 'base64').toString('utf8'), sha: data.sha };
+    return { content: await decodeContent(octokit, repo, path, data), sha: data.sha };
   } catch (error) {
     if (status(error) === 404) return null;
     throw error;
