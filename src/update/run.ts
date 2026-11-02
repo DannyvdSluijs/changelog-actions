@@ -2,8 +2,9 @@ import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { addEntry, ensureUnreleased, mentionsUrl } from '../changelog.js';
 import { readFile, writeFile } from '../github.js';
+import { writeOutputFile } from '../output.js';
 import { parseCategory, parseLabelMapping, resolveCategory } from '../labels.js';
-import { render, stripConventionalPrefix } from '../template.js';
+import { render, sanitizeTitle, stripConventionalPrefix } from '../template.js';
 
 const SUPPORTED_EVENTS = ['pull_request', 'pull_request_target'];
 
@@ -41,8 +42,9 @@ export async function run(): Promise<void> {
 
     const labels = pr.labels.map((label) => label.name);
     const category = resolveCategory(labels, mapping, fallback);
+    const title = sanitizeTitle(pr.title);
     const values = {
-      title: core.getBooleanInput('strip-prefixes') ? stripConventionalPrefix(pr.title) : pr.title,
+      title: core.getBooleanInput('strip-prefixes') ? stripConventionalPrefix(title) : title,
       number: pr.number,
       url: pr.html_url,
       author: pr.user.login,
@@ -52,6 +54,7 @@ export async function run(): Promise<void> {
     core.info(`Entry: ${entry}`);
     core.setOutput('category', category);
     core.setOutput('entry', entry);
+    core.setOutput('entry-file', writeOutputFile('entry.md', entry));
 
     const file = await readFile(octokit, context.repo, path, branch);
     const current = file?.content ?? null;

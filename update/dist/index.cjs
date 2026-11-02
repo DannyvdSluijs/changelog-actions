@@ -31360,6 +31360,17 @@ async function writeFile(octokit, repo, path, branch, content, sha, message, com
   }
 }
 
+// src/output.ts
+var import_node_fs = require("node:fs");
+var import_node_os = require("node:os");
+var import_node_path = require("node:path");
+function writeOutputFile(name, content) {
+  const dir = (0, import_node_fs.mkdtempSync)((0, import_node_path.join)(process.env.RUNNER_TEMP || (0, import_node_os.tmpdir)(), "changelog-"));
+  const path = (0, import_node_path.join)(dir, name);
+  (0, import_node_fs.writeFileSync)(path, content);
+  return path;
+}
+
 // src/labels.ts
 var import_yaml = __toESM(require_dist(), 1);
 var DEFAULT_LABEL_MAPPING = [
@@ -31412,6 +31423,9 @@ function stripConventionalPrefix(title) {
   const stripped = title.replace(/^[a-z]+(\([^)]*\))?!?:\s*/i, "");
   return stripped === "" ? title : stripped;
 }
+function sanitizeTitle(title) {
+  return title.replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, " ").trim();
+}
 
 // src/update/run.ts
 var SUPPORTED_EVENTS = ["pull_request", "pull_request_target"];
@@ -31436,8 +31450,9 @@ async function run() {
     const branch = pr.base.ref;
     const labels = pr.labels.map((label) => label.name);
     const category = resolveCategory(labels, mapping, fallback);
+    const title = sanitizeTitle(pr.title);
     const values = {
-      title: core.getBooleanInput("strip-prefixes") ? stripConventionalPrefix(pr.title) : pr.title,
+      title: core.getBooleanInput("strip-prefixes") ? stripConventionalPrefix(title) : title,
       number: pr.number,
       url: pr.html_url,
       author: pr.user.login
@@ -31447,6 +31462,7 @@ async function run() {
     core.info(`Entry: ${entry}`);
     core.setOutput("category", category);
     core.setOutput("entry", entry);
+    core.setOutput("entry-file", writeOutputFile("entry.md", entry));
     const file = await readFile(octokit, import_github.context.repo, path, branch);
     const current = file?.content ?? null;
     if (current !== null && (mentionsUrl(current, pr.html_url) || current.includes(entry))) {

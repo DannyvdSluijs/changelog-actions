@@ -24050,6 +24050,17 @@ async function createRelease(octokit, repo, tag, commitSha, notes, prerelease) {
   return data.html_url;
 }
 
+// src/output.ts
+var import_node_fs = require("node:fs");
+var import_node_os = require("node:os");
+var import_node_path = require("node:path");
+function writeOutputFile(name, content) {
+  const dir = (0, import_node_fs.mkdtempSync)((0, import_node_path.join)(process.env.RUNNER_TEMP || (0, import_node_os.tmpdir)(), "changelog-"));
+  const path = (0, import_node_path.join)(dir, name);
+  (0, import_node_fs.writeFileSync)(path, content);
+  return path;
+}
+
 // src/template.ts
 function render(template, values) {
   return template.replace(
@@ -24098,6 +24109,7 @@ async function run() {
     core.info(`Committed ${commitSha} to ${branch}.`);
     core.setOutput("version", version);
     core.setOutput("notes", notes);
+    core.setOutput("notes-file", writeOutputFile("notes.md", notes));
     core.setOutput("commit-sha", commitSha);
     if (shouldTag) {
       await createTag(octokit, import_github.context.repo, version, commitSha, committer);

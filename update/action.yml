@@ -38,7 +38,9 @@ outputs:
   category:
     description: 'The category the entry was added to.'
   entry:
-    description: 'The rendered entry.'
+    description: 'The rendered entry. Contains the PR title, which is untrusted: never put it in a run script through an expression; pass it through env or use entry-file.'
+  entry-file:
+    description: 'Path to a file containing the rendered entry.'
   commit-sha:
     description: 'The sha of the changelog commit. Empty when nothing was committed.'
 
