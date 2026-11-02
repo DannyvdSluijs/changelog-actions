@@ -169,7 +169,8 @@ Categories are the Keep a Changelog ones: `Added`, `Changed`, `Deprecated`, `Rem
 - New entries go on top of their category.
 - A missing category heading is inserted in Keep a Changelog order.
 - A missing `## [Unreleased]` section is inserted above the first release.
-- Re-running the action for the same PR does nothing: if the PR URL is already in the changelog, no entry is added.
+- Re-running the action for the same PR does nothing: if the changelog already has a line that is exactly the rendered entry, no entry is added. Text that merely mentions the PR, such as another entry linking to it, does not count.
+- With an `entry-template` without `{number}` or `{url}`, PRs with the same title render the same entry, so only `[Unreleased]` is checked: a PR titled like an already released entry is still added.
 - Only the `[Unreleased]` section is rewritten; released sections are never touched. Its layout is normalised to one blank line between categories.
 
 ## Concurrency

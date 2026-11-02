@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
-import { addEntry, ensureUnreleased, mentionsUrl } from '../changelog.js';
+import { addEntry, ensureUnreleased, hasEntry } from '../changelog.js';
 import { readFile, writeFile } from '../github.js';
 import { writeOutputFile } from '../output.js';
 import { parseCategory, parseLabelMapping, resolveCategory } from '../labels.js';
@@ -49,7 +49,8 @@ export async function run(): Promise<void> {
       url: pr.html_url,
       author: pr.user.login,
     };
-    const entry = render(core.getInput('entry-template'), values);
+    const template = core.getInput('entry-template');
+    const entry = render(template, values);
     core.info(`Labels: ${labels.join(', ') || '(none)'} -> ${category}`);
     core.info(`Entry: ${entry}`);
     core.setOutput('category', category);
@@ -58,7 +59,10 @@ export async function run(): Promise<void> {
 
     const file = await readFile(octokit, context.repo, path, branch);
     const current = file?.content ?? null;
-    if (current !== null && (mentionsUrl(current, pr.html_url) || current.includes(entry))) {
+    // An entry with the PR number or URL is unique to this PR, so it may be found anywhere. Without them, PRs
+    // with the same title render the same entry, so only a pending entry counts as this PR's.
+    const unique = /\{(number|url)\}/.test(template);
+    if (current !== null && hasEntry(current, entry, !unique)) {
       core.info(`${path} already has an entry for PR #${pr.number}; nothing to do.`);
       return;
     }

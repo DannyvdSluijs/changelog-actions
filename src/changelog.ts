@@ -150,12 +150,21 @@ export function addEntry(content: string, category: Category, entry: string): st
 }
 
 /**
- * Whether the changelog already mentions the given PR URL, anywhere in the file. Used to make
- * re-runs safe. `/pull/12` does not match `/pull/123`.
+ * Whether a line of the changelog is exactly the given entry. Used to make re-runs safe: a re-run renders
+ * the same entry from the same event, while text that merely mentions a PR does not count. With
+ * `unreleasedOnly`, released sections are ignored, for entries that are not unique to one PR.
  */
-export function mentionsUrl(content: string, url: string): boolean {
-  const escaped = url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`${escaped}(?![0-9])`).test(content);
+export function hasEntry(content: string, entry: string, unreleasedOnly = false): boolean {
+  const lines = unreleasedOnly ? unreleasedLines(content) : splitLines(content);
+  return lines.some((line) => line.trimEnd() === entry.trimEnd());
+}
+
+function unreleasedLines(content: string): string[] {
+  const lines = splitLines(content);
+  const start = lines.findIndex((line) => UNRELEASED_PATTERN.test(line));
+  if (start === -1) return [];
+  const end = lines.findIndex((line, index) => index > start && SECTION_PATTERN.test(line));
+  return lines.slice(start + 1, end === -1 ? lines.length : end);
 }
 
 export function hasVersion(content: string, version: string): boolean {
