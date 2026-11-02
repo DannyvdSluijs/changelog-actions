@@ -23979,13 +23979,22 @@ function release(content, version, date) {
 function status(error) {
   return typeof error === "object" && error !== null && "status" in error ? Number(error.status) : void 0;
 }
+async function decodeContent(octokit, repo, path, file) {
+  if (file.encoding === "base64") return Buffer.from(file.content, "base64").toString("utf8");
+  if (file.encoding === "none") {
+    const { data } = await octokit.rest.git.getBlob({ ...repo, file_sha: file.sha });
+    if (data.encoding === "base64") return Buffer.from(data.content, "base64").toString("utf8");
+    throw new Error(`Cannot read ${path}: GitHub returned it with encoding "${data.encoding}".`);
+  }
+  throw new Error(`Cannot read ${path}: GitHub returned it with encoding "${file.encoding}".`);
+}
 async function readFile(octokit, repo, path, branch) {
   try {
     const { data } = await octokit.rest.repos.getContent({ ...repo, path, ref: branch });
     if (Array.isArray(data) || data.type !== "file") {
       throw new Error(`${path} is not a file.`);
     }
-    return { content: Buffer.from(data.content, "base64").toString("utf8"), sha: data.sha };
+    return { content: await decodeContent(octokit, repo, path, data), sha: data.sha };
   } catch (error) {
     if (status(error) === 404) return null;
     throw error;
