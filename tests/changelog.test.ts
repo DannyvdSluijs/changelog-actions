@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addEntry, DEFAULT_HEADER, ensureUnreleased, mentionsUrl, release } from '../src/changelog.js';
+import { addEntry, DEFAULT_HEADER, ensureUnreleased, hasEntry, release } from '../src/changelog.js';
 
 const header = DEFAULT_HEADER;
 
@@ -76,14 +76,31 @@ describe('addEntry', () => {
   });
 });
 
-describe('mentionsUrl', () => {
-  it('finds the PR URL anywhere in the file', () => {
-    expect(mentionsUrl(released, 'https://github.com/o/r/pull/1')).toBe(true);
+describe('hasEntry', () => {
+  const entry = '- Fix x ([#77](https://github.com/o/r/pull/77))';
+  const pending = addEntry(released, 'Fixed', entry);
+
+  it('finds the exact entry', () => {
+    expect(hasEntry(pending, entry)).toBe(true);
   });
 
-  it('does not match a URL that is a prefix of another PR URL', () => {
-    const content = '- x ([#12](https://github.com/o/r/pull/123))';
-    expect(mentionsUrl(content, 'https://github.com/o/r/pull/12')).toBe(false);
+  it('finds the exact entry in a released section', () => {
+    expect(hasEntry(released, '- Older feature ([#2](https://github.com/o/r/pull/2))')).toBe(true);
+  });
+
+  it('ignores another entry that mentions the PR URL', () => {
+    const content = addEntry(released, 'Changed', '- Prep work, see https://github.com/o/r/pull/77 ([#76](https://github.com/o/r/pull/76))');
+    expect(hasEntry(content, entry)).toBe(false);
+  });
+
+  it('ignores an entry that only contains the entry as part of a line', () => {
+    const content = addEntry(released, 'Changed', `${entry} and more`);
+    expect(hasEntry(content, entry)).toBe(false);
+  });
+
+  it('ignores released sections when asked', () => {
+    expect(hasEntry(released, '- Older feature ([#2](https://github.com/o/r/pull/2))', true)).toBe(false);
+    expect(hasEntry(pending, entry, true)).toBe(true);
   });
 });
 

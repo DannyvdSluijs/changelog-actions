@@ -31311,9 +31311,16 @@ function addEntry(content, category, entry) {
     ...unreleased.after.length > 0 ? ["", ...unreleased.after] : []
   ]);
 }
-function mentionsUrl(content, url) {
-  const escaped = url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`${escaped}(?![0-9])`).test(content);
+function hasEntry(content, entry, unreleasedOnly = false) {
+  const lines = unreleasedOnly ? unreleasedLines(content) : splitLines(content);
+  return lines.some((line) => line.trimEnd() === entry.trimEnd());
+}
+function unreleasedLines(content) {
+  const lines = splitLines(content);
+  const start = lines.findIndex((line) => UNRELEASED_PATTERN.test(line));
+  if (start === -1) return [];
+  const end = lines.findIndex((line, index) => index > start && SECTION_PATTERN.test(line));
+  return lines.slice(start + 1, end === -1 ? lines.length : end);
 }
 
 // src/github.ts
@@ -31466,7 +31473,8 @@ async function run() {
       url: pr.html_url,
       author: pr.user.login
     };
-    const entry = render(core.getInput("entry-template"), values);
+    const template = core.getInput("entry-template");
+    const entry = render(template, values);
     core.info(`Labels: ${labels.join(", ") || "(none)"} -> ${category}`);
     core.info(`Entry: ${entry}`);
     core.setOutput("category", category);
@@ -31474,7 +31482,8 @@ async function run() {
     core.setOutput("entry-file", writeOutputFile("entry.md", entry));
     const file = await readFile(octokit, import_github.context.repo, path, branch);
     const current = file?.content ?? null;
-    if (current !== null && (mentionsUrl(current, pr.html_url) || current.includes(entry))) {
+    const unique = /\{(number|url)\}/.test(template);
+    if (current !== null && hasEntry(current, entry, !unique)) {
       core.info(`${path} already has an entry for PR #${pr.number}; nothing to do.`);
       return;
     }
