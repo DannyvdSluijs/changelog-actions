@@ -25,7 +25,7 @@ inputs:
     description: 'Strip Conventional Commit prefixes such as "fix:" or "feat(scope):" from the PR title.'
     default: 'false'
   commit-message:
-    description: 'Commit message. Placeholders: {title}, {number}, {url}, {author}.'
+    description: 'Commit message. Placeholders: {number}, {url}, {author}. {title} is not allowed: GitHub acts on keywords such as "Fixes #12" or "[skip ci]" in commit messages.'
     default: 'docs: Update CHANGELOG.md for PR #{number}'
   committer-name:
     description: 'Name of the committer.'
