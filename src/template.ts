@@ -34,3 +34,16 @@ export function validateEntryTemplate(template: string): string {
   }
   return template;
 }
+
+/**
+ * Checks that the commit message template does not use `{title}`. GitHub acts on keywords in commit messages
+ * on the default branch, so a PR title like `Fixes #12 [skip ci]` would close issue #12 and skip CI.
+ */
+export function validateCommitMessage(template: string): string {
+  if (template.includes('{title}')) {
+    throw new Error(
+      'commit-message cannot use {title}: GitHub acts on keywords such as "Fixes #12" or "[skip ci]" in commit messages. Use {number} or {url} instead.',
+    );
+  }
+  return template;
+}

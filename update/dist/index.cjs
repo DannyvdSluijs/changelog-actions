@@ -31450,6 +31450,14 @@ function validateEntryTemplate(template) {
   }
   return template;
 }
+function validateCommitMessage(template) {
+  if (template.includes("{title}")) {
+    throw new Error(
+      'commit-message cannot use {title}: GitHub acts on keywords such as "Fixes #12" or "[skip ci]" in commit messages. Use {number} or {url} instead.'
+    );
+  }
+  return template;
+}
 
 // src/update/run.ts
 var SUPPORTED_EVENTS = ["pull_request", "pull_request_target"];
@@ -31467,6 +31475,7 @@ async function run() {
       return;
     }
     const template = validateEntryTemplate(core.getInput("entry-template"));
+    const commitMessage = validateCommitMessage(core.getInput("commit-message"));
     const path = core.getInput("changelog-path");
     const mapping = parseLabelMapping(core.getInput("label-mapping"));
     const fallback = parseCategory(core.getInput("default-category"));
@@ -31496,7 +31505,7 @@ async function run() {
       return;
     }
     const updated = addEntry(ensureUnreleased(current), category, entry);
-    const message = render(core.getInput("commit-message"), values);
+    const message = render(commitMessage, { number: pr.number, url: pr.html_url, author: pr.user.login });
     const commitSha = await writeFile(octokit, import_github.context.repo, path, branch, updated, file?.sha, message, committer);
     core.info(`Committed ${commitSha} to ${branch}.`);
     core.setOutput("commit-sha", commitSha);

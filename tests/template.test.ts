@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, sanitizeTitle, stripConventionalPrefix, validateEntryTemplate } from '../src/template.js';
+import { render, sanitizeTitle, stripConventionalPrefix, validateCommitMessage, validateEntryTemplate } from '../src/template.js';
 
 describe('render', () => {
   it('replaces known placeholders and keeps unknown ones', () => {
@@ -51,4 +51,17 @@ describe('validateEntryTemplate', () => {
       expect(() => validateEntryTemplate(template)).toThrow('entry-template must be a single line');
     },
   );
+});
+
+describe('validateCommitMessage', () => {
+  it.each(['docs: Update CHANGELOG.md for PR #{number}', 'docs: changelog for {url} by {author}'])(
+    'accepts %j',
+    (template) => {
+      expect(validateCommitMessage(template)).toBe(template);
+    },
+  );
+
+  it.each(['docs: {title}', 'docs: PR #{number}\n\n{title}'])('refuses %j', (template) => {
+    expect(() => validateCommitMessage(template)).toThrow('commit-message cannot use {title}');
+  });
 });
