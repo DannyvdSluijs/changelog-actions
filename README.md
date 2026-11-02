@@ -186,15 +186,28 @@ As a safety net, the actions write the changelog with the file's `sha`: if the f
 The default `GITHUB_TOKEN` cannot push to a protected branch. Pass a token that may bypass the protection, for example a GitHub App installation token where the app is a bypass actor in the branch ruleset:
 
 ```yaml
-- uses: actions/create-github-app-token@v2
+- uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2.2.2
   id: app-token
   with:
     app-id: ${{ vars.CHANGELOG_APP_ID }}
     private-key: ${{ secrets.CHANGELOG_APP_PRIVATE_KEY }}
+    permission-contents: write
 - uses: DannyvdSluijs/changelog-actions/update@v1
   with:
     token: ${{ steps.app-token.outputs.token }}
 ```
+
+`permission-contents: write` limits the token to what the actions need, even when the app has more permissions. Without it, the token gets every permission of the app. Keep this job to these two steps: any other step in it can use a token that may bypass branch protection.
+
+## Pinning
+
+The examples use the `v1` tag for readability, but a tag can be moved. Because these actions receive a token that can write to your repository, and often one that may bypass branch protection, pin them to a full commit SHA:
+
+```yaml
+- uses: DannyvdSluijs/changelog-actions/update@<full-commit-sha> # v1.0.0
+```
+
+Dependabot and Renovate can keep pinned SHAs up to date.
 
 ## Development
 
