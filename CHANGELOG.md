@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-03
+
 ### Added
 - feat(release): add add-v-prefix input to tag releases as v7.0.0 ([#9](https://github.com/DannyvdSluijs/changelog-actions/pull/9))
 
