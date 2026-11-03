@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(release): add add-v-prefix input to tag releases as v7.0.0 ([#9](https://github.com/DannyvdSluijs/changelog-actions/pull/9))
 
 ### Changed
+- ci: keep the changelog up to date with the repo's own actions ([#12](https://github.com/DannyvdSluijs/changelog-actions/pull/12))
 - docs: drop the GITHUB_TOKEN permissions when passing an app token ([#11](https://github.com/DannyvdSluijs/changelog-actions/pull/11))
 - docs: use create-github-app-token v3 in the protected-branch example ([#10](https://github.com/DannyvdSluijs/changelog-actions/pull/10))
 - Add GitHub Sponsors username to FUNDING.yml ([#8](https://github.com/DannyvdSluijs/changelog-actions/pull/8))
