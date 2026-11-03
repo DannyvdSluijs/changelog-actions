@@ -1,0 +1,28 @@
+name: Changelog
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches: [main]
+
+concurrency:
+  group: changelog
+  queue: max
+
+jobs:
+  update-changelog:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # Checks out main, never the PR head: only merged code runs with the write token.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./update
+        with:
+          label-mapping: |
+            Added: [enhancement]
+            Fixed: [bug]
+            Security: [security]
