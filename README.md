@@ -187,18 +187,26 @@ As a safety net, the actions write the changelog with the file's `sha`: if the f
 The default `GITHUB_TOKEN` cannot push to a protected branch. Pass a token that may bypass the protection, for example a GitHub App installation token where the app is a bypass actor in the branch ruleset:
 
 ```yaml
-- uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-  id: app-token
-  with:
-    client-id: ${{ vars.CHANGELOG_APP_CLIENT_ID }}
-    private-key: ${{ secrets.CHANGELOG_APP_PRIVATE_KEY }}
-    permission-contents: write
-- uses: DannyvdSluijs/changelog-actions/update@v1
-  with:
-    token: ${{ steps.app-token.outputs.token }}
+jobs:
+  update-changelog:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app-token
+        with:
+          client-id: ${{ vars.CHANGELOG_APP_CLIENT_ID }}
+          private-key: ${{ secrets.CHANGELOG_APP_PRIVATE_KEY }}
+          permission-contents: write
+      - uses: DannyvdSluijs/changelog-actions/update@v1
+        with:
+          token: ${{ steps.app-token.outputs.token }}
 ```
 
 `permission-contents: write` limits the token to what the actions need, even when the app has more permissions. Without it, the token gets every permission of the app. Keep this job to these two steps: any other step in it can use a token that may bypass branch protection.
+
+The actions only use the token you pass in, so the job's own `GITHUB_TOKEN` needs no permissions: replace `contents: write` from the usage examples with `permissions: {}`. Otherwise the job holds two tokens that can write to the repository.
 
 ## Pinning
 
