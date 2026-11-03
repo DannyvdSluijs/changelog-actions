@@ -187,10 +187,10 @@ As a safety net, the actions write the changelog with the file's `sha`: if the f
 The default `GITHUB_TOKEN` cannot push to a protected branch. Pass a token that may bypass the protection, for example a GitHub App installation token where the app is a bypass actor in the branch ruleset:
 
 ```yaml
-- uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2.2.2
+- uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
   id: app-token
   with:
-    app-id: ${{ vars.CHANGELOG_APP_ID }}
+    client-id: ${{ vars.CHANGELOG_APP_CLIENT_ID }}
     private-key: ${{ secrets.CHANGELOG_APP_PRIVATE_KEY }}
     permission-contents: write
 - uses: DannyvdSluijs/changelog-actions/update@v1
