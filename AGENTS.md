@@ -9,6 +9,11 @@
 - Commit in small chunks: one logical change per commit, with its tests in the same commit.
 - Rebuild and commit `update/dist` and `release/dist` in the same commit as the source change that affects them; CI fails when they are out of date.
 
+## Pull requests
+
+- The PR title becomes the `CHANGELOG.md` entry verbatim when the PR merges, so write it for users of the actions, in the same Conventional Commits form.
+- The label picks the changelog category: `enhancement` → Added, `bug` → Fixed, `security` → Security, anything else → Changed.
+
 ## Development
 
 - `npm run all` runs typecheck, tests and the build.

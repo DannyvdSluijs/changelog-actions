@@ -1,0 +1,29 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, e.g. 1.0.0 (without "v"; the tag gets the prefix)'
+        required: true
+        type: string
+
+concurrency:
+  group: changelog
+  queue: max
+
+jobs:
+  release:
+    # The release action releases the branch it runs on, so only allow main.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./release
+        with:
+          version: ${{ inputs.version }}
+          add-v-prefix: true
