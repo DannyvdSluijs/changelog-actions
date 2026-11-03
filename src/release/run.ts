@@ -4,11 +4,12 @@ import { release } from '../changelog.js';
 import { createRelease, createTag, readFile, tagExists, writeFile } from '../github.js';
 import { writeOutputFile } from '../output.js';
 import { render } from '../template.js';
-import { isPrerelease, today, validateVersion } from '../version.js';
+import { isPrerelease, tagName, today, validateVersion } from '../version.js';
 
 export async function run(): Promise<void> {
   try {
     const version = validateVersion(core.getInput('version', { required: true }));
+    const tag = tagName(version, core.getBooleanInput('add-v-prefix'));
     const path = core.getInput('changelog-path');
     const shouldTag = core.getBooleanInput('tag');
     const shouldRelease = core.getBooleanInput('github-release');
@@ -22,24 +23,25 @@ export async function run(): Promise<void> {
     const file = await readFile(octokit, context.repo, path, branch);
     if (!file) throw new Error(`${path} not found on ${branch}.`);
     const { content, notes } = release(file.content, version, today());
-    if ((shouldTag || shouldRelease) && (await tagExists(octokit, context.repo, version))) {
-      throw new Error(`Tag ${version} already exists.`);
+    if ((shouldTag || shouldRelease) && (await tagExists(octokit, context.repo, tag))) {
+      throw new Error(`Tag ${tag} already exists.`);
     }
 
     const message = render(core.getInput('commit-message'), { version });
     const commitSha = await writeFile(octokit, context.repo, path, branch, content, file.sha, message, committer);
     core.info(`Committed ${commitSha} to ${branch}.`);
     core.setOutput('version', version);
+    core.setOutput('tag', tag);
     core.setOutput('notes', notes);
     core.setOutput('notes-file', writeOutputFile('notes.md', notes));
     core.setOutput('commit-sha', commitSha);
 
     if (shouldTag) {
-      await createTag(octokit, context.repo, version, commitSha, committer);
-      core.info(`Created tag ${version}.`);
+      await createTag(octokit, context.repo, tag, commitSha, committer);
+      core.info(`Created tag ${tag}.`);
     }
     if (shouldRelease) {
-      const url = await createRelease(octokit, context.repo, version, commitSha, notes, isPrerelease(version));
+      const url = await createRelease(octokit, context.repo, tag, commitSha, notes, isPrerelease(version));
       core.info(`Created release ${url}`);
       core.setOutput('release-url', url);
     }

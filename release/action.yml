@@ -30,10 +30,15 @@ inputs:
   github-release:
     description: 'Create a GitHub release with the changelog section as release notes.'
     default: 'true'
+  add-v-prefix:
+    description: 'Prefix the tag and release name with "v", e.g. v7.0.0. The version input and the changelog heading stay the bare version.'
+    default: 'false'
 
 outputs:
   version:
     description: 'The released version.'
+  tag:
+    description: 'The tag and release name: the version, prefixed with "v" when add-v-prefix is true.'
   notes:
     description: 'The release notes, i.e. the new changelog section without its heading. Contains PR titles, which are untrusted: never put it in a run script through an expression; pass it through env or use notes-file.'
   notes-file:

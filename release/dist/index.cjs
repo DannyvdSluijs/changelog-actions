@@ -24093,6 +24093,9 @@ function validateVersion(input) {
 function isPrerelease(version) {
   return SEMVER.exec(version)?.[4] !== void 0;
 }
+function tagName(version, addVPrefix) {
+  return addVPrefix ? `v${version}` : version;
+}
 function today(now = /* @__PURE__ */ new Date()) {
   return now.toISOString().slice(0, 10);
 }
@@ -24101,6 +24104,7 @@ function today(now = /* @__PURE__ */ new Date()) {
 async function run() {
   try {
     const version = validateVersion(core.getInput("version", { required: true }));
+    const tag = tagName(version, core.getBooleanInput("add-v-prefix"));
     const path = core.getInput("changelog-path");
     const shouldTag = core.getBooleanInput("tag");
     const shouldRelease = core.getBooleanInput("github-release");
@@ -24110,22 +24114,23 @@ async function run() {
     const file = await readFile(octokit, import_github.context.repo, path, branch);
     if (!file) throw new Error(`${path} not found on ${branch}.`);
     const { content, notes } = release(file.content, version, today());
-    if ((shouldTag || shouldRelease) && await tagExists(octokit, import_github.context.repo, version)) {
-      throw new Error(`Tag ${version} already exists.`);
+    if ((shouldTag || shouldRelease) && await tagExists(octokit, import_github.context.repo, tag)) {
+      throw new Error(`Tag ${tag} already exists.`);
     }
     const message = render(core.getInput("commit-message"), { version });
     const commitSha = await writeFile(octokit, import_github.context.repo, path, branch, content, file.sha, message, committer);
     core.info(`Committed ${commitSha} to ${branch}.`);
     core.setOutput("version", version);
+    core.setOutput("tag", tag);
     core.setOutput("notes", notes);
     core.setOutput("notes-file", writeOutputFile("notes.md", notes));
     core.setOutput("commit-sha", commitSha);
     if (shouldTag) {
-      await createTag(octokit, import_github.context.repo, version, commitSha, committer);
-      core.info(`Created tag ${version}.`);
+      await createTag(octokit, import_github.context.repo, tag, commitSha, committer);
+      core.info(`Created tag ${tag}.`);
     }
     if (shouldRelease) {
-      const url = await createRelease(octokit, import_github.context.repo, version, commitSha, notes, isPrerelease(version));
+      const url = await createRelease(octokit, import_github.context.repo, tag, commitSha, notes, isPrerelease(version));
       core.info(`Created release ${url}`);
       core.setOutput("release-url", url);
     }

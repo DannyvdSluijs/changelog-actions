@@ -74,7 +74,7 @@ jobs:
           version: ${{ inputs.version }}
 ```
 
-Before writing anything, the action checks that the version is a bare semantic version (no `v` prefix), that `[Unreleased]` has changes, and that neither the changelog section nor the tag already exist. Pre-release versions such as `7.0.0-rc1` become GitHub pre-releases.
+Before writing anything, the action checks that the version is a bare semantic version (no `v` prefix; set `add-v-prefix: true` to tag `v7.0.0`), that `[Unreleased]` has changes, and that neither the changelog section nor the tag already exist. Pre-release versions such as `7.0.0-rc1` become GitHub pre-releases.
 
 ## Inputs
 
@@ -106,8 +106,9 @@ Outputs: `category`, `entry`, `entry-file` (path to a file with the entry), `com
 | `committer-email` | `41898282+github-actions[bot]@users.noreply.github.com` | |
 | `tag` | `true` | Create an annotated tag. |
 | `github-release` | `true` | Create a GitHub release. |
+| `add-v-prefix` | `false` | Prefix the tag and release name with `v`, e.g. `v7.0.0`. The `version` input and the changelog heading stay the bare version. |
 
-Outputs: `version`, `notes`, `notes-file` (path to a file with the notes), `commit-sha`, `release-url`. See [using the outputs safely](#using-the-outputs-safely).
+Outputs: `version`, `tag` (the tag and release name), `notes`, `notes-file` (path to a file with the notes), `commit-sha`, `release-url`. See [using the outputs safely](#using-the-outputs-safely).
 
 ## Using the outputs safely
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isPrerelease, today, validateVersion } from '../src/version.js';
+import { isPrerelease, tagName, today, validateVersion } from '../src/version.js';
 
 describe('validateVersion', () => {
   it.each(['7.0.0', '7.0.0-rc1', '7.0.0-rc.1', '1.2.3+build.5'])('accepts %s', (version) => {
@@ -20,6 +20,17 @@ describe('isPrerelease', () => {
     expect(isPrerelease('7.0.0-rc1')).toBe(true);
     expect(isPrerelease('7.0.0')).toBe(false);
     expect(isPrerelease('7.0.0+build.1')).toBe(false);
+  });
+});
+
+describe('tagName', () => {
+  it('uses the bare version by default', () => {
+    expect(tagName('7.0.0', false)).toBe('7.0.0');
+  });
+
+  it('adds a v prefix when asked', () => {
+    expect(tagName('7.0.0', true)).toBe('v7.0.0');
+    expect(tagName('7.0.0-rc1', true)).toBe('v7.0.0-rc1');
   });
 });
 
