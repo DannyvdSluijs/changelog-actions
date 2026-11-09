@@ -19,11 +19,54 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      commit-sha: ${{ steps.release.outputs.commit-sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: ./release
+        id: release
         with:
           version: ${{ inputs.version }}
           add-v-prefix: true
+
+  # Moves the major tag (v1) to the release, so `uses: …@v1` follows the latest stable 1.x.y.
+  # A separate job, so it can be re-run on its own. Never create a release for the major tag:
+  # immutable releases would lock it.
+  move-major-tag:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Move the major tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+          SHA: ${{ needs.release.outputs.commit-sha }}
+        run: |
+          set -euo pipefail
+          core="${VERSION%%+*}"
+          if [[ "$core" == *-* ]]; then
+            echo "$VERSION is a pre-release; the major tag stays where it is."
+            exit 0
+          fi
+          major="v${core%%.*}"
+
+          # Only move forward: a hotfix on an older line must not pull the tag back.
+          highest=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$major." --jq '.[].ref' \
+            | sed -e 's#^refs/tags/v##' -e 's/+.*//' | grep -v -- - | sort -V | tail -n 1)
+          if [[ "$highest" != "$core" ]]; then
+            echo "$VERSION is not the highest $major release ($highest); $major stays where it is."
+            exit 0
+          fi
+
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$major" > /dev/null 2>&1; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$major" -f sha="$SHA" -F force=true > /dev/null
+            echo "Moved $major to $SHA."
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$major" -f sha="$SHA" > /dev/null
+            echo "Created $major at $SHA."
+          fi
