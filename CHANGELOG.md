@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- ci: update npm dependencies with Dependabot after a cooldown ([#16](https://github.com/DannyvdSluijs/changelog-actions/pull/16))
 - ci: move the major version tag on release ([#13](https://github.com/DannyvdSluijs/changelog-actions/pull/13))
 
 ### Changed
