@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- ci: move the major version tag on release ([#13](https://github.com/DannyvdSluijs/changelog-actions/pull/13))
+
 ### Changed
 - docs: pin the update action in the protected-branch example ([#14](https://github.com/DannyvdSluijs/changelog-actions/pull/14))
 
