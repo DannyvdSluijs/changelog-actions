@@ -199,7 +199,7 @@ jobs:
           client-id: ${{ vars.CHANGELOG_APP_CLIENT_ID }}
           private-key: ${{ secrets.CHANGELOG_APP_PRIVATE_KEY }}
           permission-contents: write
-      - uses: DannyvdSluijs/changelog-actions/update@v1
+      - uses: DannyvdSluijs/changelog-actions/update@e124e4619db73e5dedae3e49228a87cdef10ea1e # v1.0.0
         with:
           token: ${{ steps.app-token.outputs.token }}
 ```
@@ -210,7 +210,7 @@ The actions only use the token you pass in, so the job's own `GITHUB_TOKEN` need
 
 ## Pinning
 
-The examples use the `v1` tag for readability, but a tag can be moved. Because these actions receive a token that can write to your repository, and often one that may bypass branch protection, pin them to a full commit SHA:
+Most examples use the `v1` tag for readability, but a tag can be moved. Because these actions receive a token that can write to your repository, and often one that may bypass branch protection, pin them to a full commit SHA, as the [protected branches](#protected-branches) example does:
 
 ```yaml
 - uses: DannyvdSluijs/changelog-actions/update@<full-commit-sha> # v1.0.0
