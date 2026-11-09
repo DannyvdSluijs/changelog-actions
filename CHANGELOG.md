@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- docs: pin the update action in the protected-branch example ([#14](https://github.com/DannyvdSluijs/changelog-actions/pull/14))
+
 ## [1.0.0] - 2026-11-03
 
 ### Added
