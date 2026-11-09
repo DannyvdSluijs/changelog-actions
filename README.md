@@ -184,7 +184,22 @@ As a safety net, the actions write the changelog with the file's `sha`: if the f
 
 ## Protected branches
 
-The default `GITHUB_TOKEN` cannot push to a protected branch. Pass a token that may bypass the protection, for example a GitHub App installation token where the app is a bypass actor in the branch ruleset:
+The default `GITHUB_TOKEN` cannot push to a protected branch. Pass a token that may bypass the protection, for example a GitHub App installation token where the app is a bypass actor in the branch ruleset.
+
+Set up the app once:
+
+1. Create a GitHub App under **Settings → Developer settings → GitHub Apps → New GitHub App**:
+   - Clear **Webhook → Active**; the app needs no events.
+   - Under **Repository permissions**, set **Contents** to **Read and write**. Leave everything else at **No access**.
+   - Under **Where can this GitHub App be installed?**, pick **Only on this account**.
+2. On the app's page, note the **Client ID** and click **Generate a private key**. GitHub downloads a `.pem` file.
+3. Click **Install App** and install it on **Only select repositories**: the repositories that use these actions.
+4. In each repository, under **Settings → Secrets and variables → Actions**, add:
+   - the variable `CHANGELOG_APP_CLIENT_ID` with the Client ID;
+   - the secret `CHANGELOG_APP_PRIVATE_KEY` with the full contents of the `.pem` file. Delete the downloaded file afterwards.
+5. Under **Settings → Rules → Rulesets**, open the ruleset that protects the branch and add the app to the **Bypass list**. With classic branch protection, add the app to **Allow specified actors to bypass required pull requests** instead. When a ruleset also protects tags and you use the `release` action, add the app to that ruleset's bypass list too.
+
+Then create the token in the workflow and pass it to the action:
 
 ```yaml
 jobs:
